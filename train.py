@@ -22,11 +22,10 @@ preprocess = Preprocess()
 train_data, val_data, test_data = util.partition(data_load)
 
 # 에세이 본문, 주제, 주제의 명료성 점수
-X_train, subjcet_train, y_train = zip(*train_data)
+X_train, subject_train, y_train = zip(*train_data)
 X_val, subject_val, y_val = zip(*val_data)
 X_test, subject_test, y_test = zip(*test_data)
 
-print(X_train.type, X_train.shape, subjcet_train.type, subjcet_train.shape)
 
 # 데이터 전처리
 X_total = list(X_train) + list(X_val) + list(X_test)

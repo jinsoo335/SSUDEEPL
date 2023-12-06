@@ -1,3 +1,6 @@
+import math
+from collections import Counter
+
 import numpy as np
 import random
 
@@ -37,3 +40,39 @@ def pad_vectors(vectors, max_length):
         padded_vectors[i, :length] = vector
 
     return padded_vectors
+
+
+# TF-IDF 계산을 위한 메소드
+def compute_tf(document):
+    tf_dict = {}
+    bow_count = len(document)
+    word_counts = Counter(document)
+    for word, count in word_counts.items():
+        tf_dict[word] = count / float(bow_count)
+    return tf_dict
+
+def compute_idf(documents):
+    N = len(documents)
+    idf_dict = {}
+    idf_dict = Counter([word for document in documents for word in set(document)])
+    for word, val in idf_dict.items():
+        idf_dict[word] = math.log(N / float(val))
+    return idf_dict
+
+def compute_tf_idf(documents):
+    idf_dict = compute_idf(documents)
+    tf_idf = []
+    for document in documents:
+        tf_dict = compute_tf(document)
+        tf_idf_doc = {}
+        for word, tf_val in tf_dict.items():
+            tf_idf_doc[word] = tf_val * idf_dict[word]
+        tf_idf.append(tf_idf_doc)
+    return tf_idf
+
+
+def cosine_similarity(vec1, vec2):
+    dot_product = np.dot(vec1, vec2)
+    norm_a = np.linalg.norm(vec1)
+    norm_b = np.linalg.norm(vec2)
+    return dot_product / (norm_a * norm_b)

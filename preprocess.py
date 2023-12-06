@@ -62,12 +62,19 @@ class Preprocess:
         text = re.sub(r'[^가-힣a-zA-Z0-9 ]', ' ', text)
 
         # 어간 추출 (생각함, 생각합니다. -> 생각한다)
-        words = self.analyzer.morphs(text, stem=True)
+        #words = self.analyzer.morphs(text, stem=True)
+
+        # 형태소 분석
+        words = self.analyzer.morphs(text)
 
         # 불용어 제외
         # words = [word for word in words if word not in self.stopwords]
 
         return ' '.join(words)
+
+
+
+
 
     # 로딩해온 문장들을 전처리 과정을 거친 후, 벡터화 시킨다.
     def preprocessing_list(self, texts):

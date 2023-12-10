@@ -31,6 +31,21 @@ def partition(data_load):
     return train_data, val_data, test_data
 
 
+def partition_vector(data):
+    # 데이터 섞기
+    random.shuffle(data)
+
+    # 데이터 분할
+    train_len = int(len(data) * train_ratio)
+    val_len = int(len(data) * val_ratio)
+
+    train_data = data[:train_len]
+    val_data = data[train_len: train_len + val_len]
+    test_data = data[train_len + val_len:]
+
+    return train_data, val_data, test_data
+
+
 # 벡터화된 데이터의 길이를 같게 해주기 위한 메소드
 def pad_vectors(vectors, max_length):
     padded_vectors = np.zeros((len(vectors), max_length))

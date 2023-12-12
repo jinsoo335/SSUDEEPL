@@ -143,24 +143,93 @@ avg_test_loss = test_loss / batch_count
 print(f"Test Loss: {avg_test_loss}")
 
 
-# for epoch in range(epochs):
-#     np.random.shuffle(context_target_pairs)
-#     total_loss = 0
-#     batch_count = 0
-#
-#     for i in tqdm(range(0, len(context_target_pairs), batch_size), desc="Contexts Targets process"):
-#         batch = context_target_pairs[i : i+batch_size]
-#         contexts, targets = zip(*batch)
-#         contexts = np.array(contexts)
-#         targets = np.array(targets)
-#
-#         loss = model.forward(contexts, targets)
-#         model.backward()
-#         optimizer.update(model.params, model.grads)
-#         total_loss += loss
-#         batch_count += 1
-#
-#     avg_loss = total_loss / batch_count
-#     print(f"Epoch {epoch}, Avrage Loss: {avg_loss}")
+
+# 주제문과 에세이 본문에 대한 벡터 생성
+def get_document_vector(text, word_to_id, model):
+    vectors = [model.word_vecs[word_to_id[word]] for word in text.split() if word in word_to_id]
+    if len(vectors) > 0:
+        return np.mean(vectors, axis=0)
+    else:
+        return np.zeros(model.word_vec.shape[1])
+
+# 주제문과 에세이 본문에 대한 벡터 생성
+subject_vectors = np.array([get_document_vector(subject, word_to_id, model) for subject in data_subjects])
+content_vectors = np.array([get_document_vector(content, word_to_id, model) for content in data_texts])
 
 
+# 훈련, 검증, 테스트 분할
+train_ratio = 0.8
+val_ratio = 0.1
+test_ratio = 0.1
+
+num_data = len(data_scores)
+train_size = int(num_data * train_ratio)
+val_size = int(num_data * val_ratio)
+test_size = num_data - train_size - val_size
+
+# 데이터셋 인덱스 생성
+train_indices = np.arange(0, train_size)
+val_indices = np.arange(train_size, train_size + val_size)
+test_indices = np.arange(train_size + val_size, num_data)
+
+# 주제문과 에세이 본문 벡터를 3개로 나눔
+train_subject_vectors = subject_vectors[train_indices]
+val_subject_vectors = subject_vectors[val_indices]
+test_subject_vectors = subject_vectors[test_indices]
+
+train_content_vectors = content_vectors[train_indices]
+val_content_vectors = content_vectors[val_indices]
+test_content_vectors = content_vectors[test_indices]
+
+# 점수도 3개로 나눔
+y_train = np.array(data_scores)[train_indices]
+y_val = np.array(data_scores)[val_indices]
+y_test = np.array(data_scores)[test_indices]
+
+
+# 주제문과 본문 평균 처리
+X_train = (train_subject_vectors + train_content_vectors) / 2
+X_train = (X_train - X_train.mean()) / X_train.std()
+
+X_val = (val_subject_vectors + val_content_vectors) / 2
+X_val = (X_val - X_val.mean()) / X_val.std()
+
+X_test = (test_subject_vectors + test_content_vectors) / 2
+X_test = (X_test - X_test.mean()) / X_test.std()
+
+
+W = np.random.randn(X_train.shape[1])
+b = np.random.randn()
+
+learning_rate = 0.001
+epochs = 20
+
+
+# 훈련 셋 적용
+for epoch in range(epochs):
+    predictions_train = X_train.dot(W) + b
+
+    loss_train = np.mean((predictions_train - y_train) ** 2)
+
+    gradient_W = 2.0 * X_train.T.dot(predictions_train - y_train) / X_train.shape[0]
+    gradient_b = 2.0 * np.sum(predictions_train - y_train) / X_train.shape[0]
+
+    W -= learning_rate * gradient_W
+    b -= learning_rate * gradient_b
+
+    # 검증
+    predictions_val = X_val.dot(W) + b
+    loss_val = np.mean((predictions_val - y_val) ** 2)
+
+    print(f"Epoch {epoch}: Training loss = {loss_train}, val loss = {loss_val}")
+
+# 테스트 세트 평가
+predictions_test = X_test.dot(W) + b
+loss_test = np.mean((predictions_test - y_test) ** 2)
+
+# 결과 시각화
+plt.scatter(y_test, predictions_test)
+plt.xlabel('Actual Scores')
+plt.ylabel('Predicted Scores')
+plt.title('Actual vs Predicted Scores on Test Data')
+plt.show()

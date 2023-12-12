@@ -80,7 +80,7 @@ context_size = window_size * 2  # 양쪽 문맥 크기의 합
 
 # 하이퍼 파라미터 설정
 learning_rate = 0.3
-epochs = 20
+epochs = 10
 batch_size = 20    # 한 번에 처리할 데이터 수
 
 
